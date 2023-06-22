@@ -125,8 +125,12 @@
           (implement-me! 'dump)
           )
          ((generate)
-          ;; TODO
-          (implement-me! 'generate))
+          (let (passwd (generate-password .length
+                                          lowercase: .lowercase
+                                          uppercase: .uppercase
+                                          digit:     .digit
+                                          special:   .special))
+            (displayln passwd)))
          ((help)
           (getopt-display-help-topic gopt .?command "gxkpg")))))
    (catch (getopt-error? exn)
