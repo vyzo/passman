@@ -24,12 +24,14 @@
   result)
 
 (def (generate-password len lowercase: l uppercase: u digit: d special: s)
-  (def the-password (make-string 0))
+  (def the-password (make-string len))
+  (def cursor 0)
 
   (defrules add-password-chars! ()
     ((_ source count)
      (let (chars (get-password-chars source count))
-       (set! the-password (string-append the-password chars)))))
+       (substring-move! chars 0 count the-password cursor)
+       (set! cursor (+ cursor count)))))
 
   (add-password-chars! lowercase l)
   (add-password-chars! uppercase u)
