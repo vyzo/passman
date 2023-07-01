@@ -2,8 +2,10 @@
         :std/iter
         :std/crypto
         :std/text/json
-        :std/text/utf8)
+        :std/text/utf8
+        :std/misc/ports)
 (export create-vault
+        open-vault
         vault? vault-entries)
 
 ;; the vault data structure
@@ -15,13 +17,19 @@
 ;; create a new vault
 (def (create-vault path pass)
   (let (vault (make-vault path pass []))
-    (write-vault vault)
+    (write-vault! vault)
+    vault))
+
+;; open an existing vault
+(def (open-vault path pass)
+  (let (vault (make-vault path pass []))
+    (read-vault! vault)
     vault))
 
 ;;; vault I/O
 (def magic "%vault/v0%")
 
-(def (write-vault vault)
+(def (write-vault! vault)
   (let ((tmp (string-append (vault-path vault) ".tmp"))  ; where to write, before moving
         (old (string-append (vault-path vault) ".old"))) ; where to save old contents
     (when (file-exists? tmp)
@@ -32,19 +40,38 @@
       (for (e (vault-entries vault))
         (write-json e buf)
         (newline buf))
-      (let* ((cipher (make-aes-256-gcm-cipher))
-             (encrypted
-              (encrypt cipher                                    ; AES256/GCM
-                       (passphrase->key (vault-pass vault))      ; key
+      (let* ((plaintext (get-output-u8vector buf))
+             (cipher (make-aes-256-gcm-cipher))
+             (ciphertext
+              (encrypt cipher
+                       (passphrase->key (vault-pass vault))
                        (make-u8vector (cipher-iv-length cipher)) ; IV = 0...
-                       (get-output-u8vector buf))))              ; plaintext
-             (call-with-output-file [path: tmp permissions: #o600]
-               (lambda (outp) (write-u8vector encrypted outp)))))
+                       plaintext)))
+        (call-with-output-file [path: tmp permissions: #o600]
+          (lambda (outp) (write-u8vector ciphertext outp)))))
     (when (file-exists? old)
       (delete-file old))
     (when (file-exists? (vault-path vault))
       (rename-file (vault-path vault) old))
     (rename-file tmp (vault-path vault))))
+
+(def (read-vault! vault)
+  (let* ((ciphertext (read-file-u8vector (vault-path vault)))
+         (cipher (make-aes-256-gcm-cipher))
+         (plaintext
+          (decrypt cipher
+                    (passphrase->key (vault-pass vault))
+                    (make-u8vector (cipher-iv-length cipher)) ; IV = 0 ...
+                    ciphertext))
+         (input (open-input-u8vector plaintext)))
+    (let (input-magic (read-line input))
+      (unless (equal? magic input-magic)
+        (error "Bad magic" input-magic)))
+    (let lp ((es []))
+      (let (e (read-json input))
+        (if (eof-object? e)
+          (set! (vault-entries vault) (reverse es))
+          (lp (cons e es)))))))
 
 (def (passphrase->key pass)
   (sha256 (string->utf8 pass)))
