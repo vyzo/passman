@@ -57,7 +57,7 @@
              help: "search for an entry using regular expressions"))
   (def dump-cmd
     (command 'dump
-             path-option passphrase-option
+             path-option passphrase-option json-flag
              (flag 'yes "-y" "--yes"
                    help: "don't ask for confirmation, just do it!")
              help: "dump the contents of the vault"))
@@ -119,9 +119,7 @@
           (implement-me! 'search)
           )
          ((dump)
-          ;; TODO
-          (implement-me! 'dump)
-          )
+          (dump-vault path: .path passphrase: .passphrase json: .?json confirm: (not .?yes)))
          ((generate)
           (let (passwd (generate-password .length
                                           lowercase: .lowercase

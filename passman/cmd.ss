@@ -1,9 +1,11 @@
 (import :gerbil/gambit
         :std/sugar
         :std/iter
+        :std/text/json
         :std/misc/shuffle
-        (prefix-in ./vault |vault:|))
+        (prefix-in ./vault vault.))
 (export create-vault
+        dump-vault
         generate-password)
 
 ;;; vault creation
@@ -14,10 +16,31 @@
          (dir (path-directory path)))
     (unless (string-empty? dir)
       (create-directory* dir))
-    (vault:create-vault path pass)
+    (vault.create-vault path pass)
     (void)))
 
-;;;; passphrase input
+;;; vault dump
+(def (dump-vault path: path passphrase: pass json: json? confirm: confirm?)
+  (let/cc return
+    (unless (file-exists? path)
+      (error "vault does not exist" path))
+    (when confirm?
+      (display "WARNING: this will dump the contexts of the vault in plain view. Really do it? [y/n]: ")
+      (unless (member (read-line) '("y" "yes" "Y" "YES"))
+        (return (void))))
+    (let* ((pass (or pass (get-passphrase)))
+           (vault (vault.open-vault path pass))
+           (dump (if json? (lambda (e) (write-json e) (newline)) write-entry)))
+      (for (e (vault.vault-entries vault))
+        (dump e)
+        (newline)))))
+
+(def (write-entry e)
+  (displayln "---")
+  (for ((values k v) e)
+    (displayln k ": " v)))
+
+;;; passphrase input
 (def (get-passphrase (prompt "Enter passphrase: "))
   (display prompt)
   (force-output)
