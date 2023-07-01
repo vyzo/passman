@@ -1,11 +1,14 @@
 (gerbil-build-deps-v2:
- (vyzo/passman/vault "passman/vault" (gerbil/core))
+ (vyzo/passman/vault
+  "passman/vault"
+  (gerbil/core gerbil/gambit std/crypto std/iter std/text/json std/text/utf8))
  (vyzo/passman/cmd
   "passman/cmd"
   (gerbil/core
-   gerbil/gambit/random
+   gerbil/gambit
    std/iter
    std/misc/shuffle
+   std/sugar
    vyzo/passman/vault))
  (vyzo/passman/main
   (exe: "passman/main" bin: "passman")

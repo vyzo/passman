@@ -105,9 +105,7 @@
      (let-hash opt
        (case cmd
          ((create)
-          ;; TODO
-          (implement-me! 'create)
-          )
+          (create-vault path: .path passphrase: .passphrase))
          ((add)
           ;; TODO
           (implement-me! 'add)
