@@ -29,6 +29,9 @@
 ;;; vault I/O
 (def magic "%vault/v0%")
 
+(def (make-cipher)
+  (make-aes-256-cbc-cipher))
+
 (def (write-vault! vault)
   (let ((tmp (string-append (vault-path vault) ".tmp"))  ; where to write, before moving
         (old (string-append (vault-path vault) ".old"))) ; where to save old contents
@@ -41,7 +44,7 @@
         (write-json e buf)
         (newline buf))
       (let* ((plaintext (get-output-u8vector buf))
-             (cipher (make-aes-256-gcm-cipher))
+             (cipher (make-cipher))
              (ciphertext
               (encrypt cipher
                        (passphrase->key (vault-pass vault))
@@ -57,7 +60,7 @@
 
 (def (read-vault! vault)
   (let* ((ciphertext (read-file-u8vector (vault-path vault)))
-         (cipher (make-aes-256-gcm-cipher))
+         (cipher (make-cipher))
          (plaintext
           (decrypt cipher
                     (passphrase->key (vault-pass vault))
