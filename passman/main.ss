@@ -22,8 +22,12 @@
             help: "specify input non interactively"))
   (def key-arg
     (argument 'key
-              value: string->symbol
               help: "the entry's key"))
+  (def maybe-key-arg
+    (argument 'key
+              value: (lambda (x) (if (equal? x "-") #f x))
+              help: "the entry's key, if not -. If it is -, then multiple entries can be processed, but they must have an explicit key argument"))
+
   (def json-flag
     (flag 'json "-j" "--json"
           help: "output in json"))
@@ -35,11 +39,11 @@
              help: "create a new vault"))
   (def add-cmd
     (command 'add
-             key-arg json-flag input-option path-option passphrase-option
-             help: "add a new entry to the vault"))
+             maybe-key-arg json-flag input-option path-option passphrase-option
+             help: "add new entries to the vault"))
   (def update-cmd
     (command 'update
-             key-arg json-flag input-option path-option passphrase-option
+             maybe-key-arg json-flag input-option path-option passphrase-option
              help: "update an existing entry in the vault"))
   (def get-cmd
     (command 'get
@@ -47,14 +51,16 @@
              help: "get an entry from the vault"))
   (def search-cmd
     (command 'search
-             path-option passphrase-option
-             (argument 'key
-                       help: "the key to search in; can be a comma separated list or * for all keys")
+             json-flag path-option passphrase-option
              (argument 'niddle
                        help: "the value to match; can optionally be a regex")
              (flag 'regex "-r"
                    help: "the niddle is a regular expression")
-             help: "search for an entry using regular expressions"))
+             help: "search for an entry using regular expressions; the search examins the value of all fields"))
+  (def delete-cmd
+    (command 'delete
+             key-arg path-option passphrase-option
+             help: "delete an entry from the vault"))
   (def dump-cmd
     (command 'dump
              path-option passphrase-option json-flag
@@ -96,6 +102,7 @@
             update-cmd
             get-cmd
             search-cmd
+            delete-cmd
             dump-cmd
             genpass-cmd
             help-cmd))
@@ -107,21 +114,15 @@
          ((create)
           (create-vault path: .path passphrase: .passphrase))
          ((add)
-          ;; TODO
-          (implement-me! 'add)
-          )
+          (add-to-vault! .key path: .path passphrase: .passphrase input: .input json: .?json))
          ((update)
-          ;; TODO
-          (implement-me! 'update)
-          )
+          (update-vault! .key path: .path passphrase: .passphrase input: .input json: .?json))
          ((get)
-          ;; TODO
-          (implement-me! 'get)
-          )
+          (get-entry .key path: .path passphrase: .passphrase json: .?json))
          ((search)
-          ;; TODO
-          (implement-me! 'search)
-          )
+          (find-entry .key path: .path passphrase: .passphrase regex: .?regex) json: .?json)
+         ((delete)
+          (delete-entry! .key path: .path passphrase: .passphrase))
          ((dump)
           (dump-vault path: .path passphrase: .passphrase json: .?json confirm: (not .?yes)))
          ((generate)

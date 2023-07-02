@@ -4,8 +4,16 @@
         :std/sort
         :std/text/json
         :std/misc/shuffle
+        :std/misc/symbol
+        :std/srfi/13
+        :std/pregexp
         (prefix-in ./vault vault.))
 (export create-vault
+        add-to-vault!
+        update-vault!
+        get-entry
+        find-entry
+        delete-entry!
         dump-vault
         generate-password)
 
@@ -19,6 +27,75 @@
       (create-directory* dir))
     (vault.create-vault path pass)
     (void)))
+
+;;; adding stuff to the vault
+(def (add-to-vault! key path: path passphrase: pass input: input json: json?)
+  (unless (file-exists? path)
+    (error "vault does not exist" path))
+  (let* ((pass (or pass (get-passphrase)))
+         (vault (vault.open-vault path pass))
+         (input (or input (get-input)))
+         (entries (if key
+                    [(parse-entry key input json?)]
+                    (parse-input input json?))))
+    (vault.vault-add! vault entries)
+    (vault.write-vault! vault)
+    (void)))
+
+(def (update-vault! key path: path passphrase: pass input: input json: json?)
+  (unless (file-exists? path)
+    (error "vault does not exist" path))
+  (let* ((pass (or pass (get-passphrase)))
+         (vault (vault.open-vault path pass))
+         (input (or input (get-input)))
+         (entries (if key
+                    [(parse-entry key input json?)]
+                    (parse-input input json?))))
+    (vault.vault-update! vault entries)
+    (vault.write-vault! vault)
+    (void)))
+
+;;; retrieving stuff from the vault
+(def (get-entry key path: path passphrase: pass json: json?)
+  (unless (file-exists? path)
+    (error "vault does not exist" path))
+  (let* ((pass (or pass (get-passphrase)))
+         (vault (vault.open-vault path pass))
+         (entries (vault.vault-get-fuzzy vault key)))
+    (for (e entries)
+      (if json?
+        (write-json e)
+        (write-entry e))
+      (newline))))
+
+(def (find-entry niddle path: path passphrase: pass regex: rx? json: json?)
+  (unless (file-exists? path)
+    (error "vault does not exist" path))
+  (let* ((pass (or pass (get-passphrase)))
+         (vault (vault.open-vault path pass))
+         (search
+          (if rx?
+            (let (rx (pregexp niddle))
+              (lambda (val)
+                (pregexp-match rx val))
+              (lambda (val)
+                (string-contains val niddle)))))
+         (entries (vault.vault-find vault search)))
+    (for (e entries)
+      (if json?
+        (write-json e)
+        (write-entry e))
+      (newline))
+    ))
+
+(def (delete-entry! key path: path passphrase: pass)
+  (unless (file-exists? path)
+    (error "vault does not exist" path))
+  (let* ((pass (or pass (get-passphrase)))
+         (vault (vault.open-vault path pass)))
+    (unless (vault.vault-delete! vault key)
+      (error "entry does not exist" key))
+    (vault.write-vault! vault)))
 
 ;;; vault dump
 (def (dump-vault path: path passphrase: pass json: json? confirm: confirm?)
@@ -39,24 +116,66 @@
 ;;; entry I/O
 (def (write-entry e)
   (displayln "---")
-  ;; TODO symbol<? in :std/sort -- see issue #709
-  (let* ((cache (make-hash-table-eq))
-         (cache-get
-          (lambda (x)
-            (cond
-             ((hash-get cache x) => values)
-             (else
-              (let (str (symbol->string x))
-                (hash-put! cache x str)
-                str)))))
-         (cmp (lambda (x y) (string<? (cache-get x) (cache-get y))))
-         (keys (sort (hash-keys e) cmp)))
+  (let (keys (sort (hash-keys e) symbol<?))
     (for (k keys)
       (displayln k ": " (hash-get e k)))))
 
 (def (write-entry/json e)
   (write-json e)
   (newline))
+
+(def (parse-input input json?)
+  (if json?
+    (parse-input/json input)
+    (parse-entries input)))
+
+(def (parse-input/json input)
+  (let (inp (open-input-string input))
+    (let lp ((entries []))
+      (let (next (read-line inp))
+        (if (eof-object? next)
+          (reverse entries)
+          (lp (cons (read-json next) entries)))))))
+
+(def (parse-entries input)
+  (let (inp (open-input-string input))
+    (let lp ((entries []))
+      (let (next (read-entry inp))
+        (if (eof-object? next)
+          (reverse entries)
+          (lp (cons next entries)))))))
+
+(def (parse-entry key input json?)
+  (let* ((inp (open-input-string input))
+         (entry (if json? (read-json inp) (read-entry inp))))
+    (hash-put! entry 'key key)
+    entry))
+
+(def (read-entry inp)
+  (let lp ((fields []))
+    (let (next (read-line inp))
+      (cond
+       ((eof-object? next)
+        (if (null? fields)
+          next
+          (list->hash-table-eq fields)))
+       ((string-prefix? "-" next)
+        (if (null? fields)
+          (lp fields)
+          (list->hash-table-eq fields)))
+       ((string-empty? next)
+        (lp fields))
+       (else
+        (let (colon (string-index next #\:))
+          (if colon
+            (let ((key (string->symbol (substring next 0 colon)))
+                  (value (string-trim-both (substring next (1+ colon) (string-length next)))))
+              (lp (cons (cons key value) fields)))
+            (error "Malformed entry" next))))))))
+
+;;; generic input
+(def (get-input)
+  (read-line (current-input-port) #f))
 
 ;;; passphrase input
 (def (get-passphrase (prompt "Enter passphrase: "))

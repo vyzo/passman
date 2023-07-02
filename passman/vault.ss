@@ -3,10 +3,18 @@
         :std/crypto
         :std/text/json
         :std/text/utf8
-        :std/misc/ports)
+        :std/misc/ports
+        :std/srfi/1
+        :std/srfi/13)
 (export create-vault
         open-vault
         write-vault!
+        vault-add!
+        vault-update!
+        vault-get
+        vault-get-fuzzy
+        vault-find
+        vault-delete!
         vault? vault-entries)
 
 ;; the vault data structure
@@ -26,6 +34,80 @@
   (let (vault (make-vault path pass []))
     (read-vault! vault)
     vault))
+
+;; add some entries to a vault
+(def (vault-add! vault entries)
+  (for (e entries)
+    (let (key (hash-get e 'key))
+      (cond
+       ((not key)
+        (error "Missing entry key" (hash->list e)))
+       ((vault-entry-exists? vault key)
+        (error "Duplicate entry" key))
+       (else
+        (set! (vault-entries vault) (append! (vault-entries vault) [e])))))))
+
+;; update existing entries in a vault; non existent entries will be added
+(def (vault-update! vault entries)
+  (for (e entries)
+    (let (key (hash-get e 'key))
+      (cond
+       ((not key)
+        (error "Missing entry key" (hash->list e)))
+       ((vault-get vault key) =>
+        (lambda (ee)
+          (hash-merge! ee e)))
+       (else
+        (set! (vault-entries vault) (append! (vault-entries vault) [e])))))))
+
+;;; get an entry from the vault
+(def (vault-get vault key)
+  (let lp ((entries (vault-entries vault)))
+    (match entries
+      ([e . entries]
+       (if (equal? (hash-get e 'key) key)
+         e
+         (lp entries)))
+      (else #f))))
+
+(def (vault-get-fuzzy vault key)
+  (let lp ((entries (vault-entries vault)) (result []))
+    (match entries
+      ([e . entries]
+       (if (string-contains (hash-get e 'key) key)
+         (lp entries (cons e result))
+         (lp entries result)))
+      (else
+       (reverse result)))))
+
+(def (vault-find vault search)
+  (let lp ((entries (vault-entries vault)) (result []))
+    (match entries
+      ([e . entries]
+       (if (vault-entry-search e search)
+         (lp entries (cons e result))
+         (lp entries result)))
+      (else
+       (reverse result)))))
+
+(def (vault-entry-search entry search)
+  (let lp ((fields (hash->list entry)))
+    (match fields
+      ([[k . v] . fields]
+       (if (search v)
+         [k . v]
+         (lp fields)))
+      (else #f))))
+
+(def (vault-entry-exists? vault key)
+  (if (vault-get vault key) #t #f))
+
+;;; entry deletion
+(def (vault-delete! vault key)
+  (and (vault-get vault key)
+       (set! (vault-entries vault)
+         (delete key (vault-entries vault)
+                 (lambda (e) (equal? (hash-get e 'key) key))))))
 
 ;;; vault I/O
 (def magic "%vault/v0%")
