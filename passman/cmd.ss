@@ -39,6 +39,7 @@
 ;;; entry I/O
 (def (write-entry e)
   (displayln "---")
+  ;; TODO symbol<? in :std/sort -- see issue #709
   (let* ((cache (make-hash-table-eq))
          (cache-get
           (lambda (x)
