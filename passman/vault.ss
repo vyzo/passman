@@ -6,6 +6,7 @@
         :std/misc/ports)
 (export create-vault
         open-vault
+        write-vault!
         vault? vault-entries)
 
 ;; the vault data structure
@@ -30,7 +31,7 @@
 (def magic "%vault/v0%")
 
 (def (make-cipher)
-  (make-aes-256-cbc-cipher))
+  (make-aes-256-cfb-cipher))
 
 (def (write-vault! vault)
   (let ((tmp (string-append (vault-path vault) ".tmp"))  ; where to write, before moving
