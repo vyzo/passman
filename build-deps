@@ -6,6 +6,8 @@
    std/crypto
    std/iter
    std/misc/ports
+   std/srfi/1
+   std/srfi/13
    std/text/json
    std/text/utf8))
  (vyzo/passman/cmd
@@ -14,7 +16,10 @@
    gerbil/gambit
    std/iter
    std/misc/shuffle
+   std/misc/symbol
+   std/pregexp
    std/sort
+   std/srfi/13
    std/sugar
    std/text/json
    vyzo/passman/vault))
