@@ -114,6 +114,10 @@
           ;; TODO
           (implement-me! 'update)
           )
+         ((get)
+          ;; TODO
+          (implement-me! 'get)
+          )
          ((search)
           ;; TODO
           (implement-me! 'search)
