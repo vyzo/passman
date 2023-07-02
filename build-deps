@@ -14,7 +14,9 @@
    gerbil/gambit
    std/iter
    std/misc/shuffle
+   std/sort
    std/sugar
+   std/text/json
    vyzo/passman/vault))
  (vyzo/passman/main
   (exe: "passman/main" bin: "passman")

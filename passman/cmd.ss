@@ -1,6 +1,7 @@
 (import :gerbil/gambit
         :std/sugar
         :std/iter
+        :std/sort
         :std/text/json
         :std/misc/shuffle
         (prefix-in ./vault vault.))
@@ -30,15 +31,31 @@
         (return (void))))
     (let* ((pass (or pass (get-passphrase)))
            (vault (vault.open-vault path pass))
-           (dump (if json? (lambda (e) (write-json e) (newline)) write-entry)))
+           (dump (if json? write-entry/json write-entry)))
       (for (e (vault.vault-entries vault))
         (dump e)
         (newline)))))
 
+;;; entry I/O
 (def (write-entry e)
   (displayln "---")
-  (for ((values k v) e)
-    (displayln k ": " v)))
+  (let* ((cache (make-hash-table-eq))
+         (cache-get
+          (lambda (x)
+            (cond
+             ((hash-get cache x) => values)
+             (else
+              (let (str (symbol->string x))
+                (hash-put! cache x str)
+                str)))))
+         (cmp (lambda (x y) (string<? (cache-get x) (cache-get y))))
+         (keys (sort (hash-keys e) cmp)))
+    (for (k keys)
+      (displayln k ": " (hash-get e k)))))
+
+(def (write-entry/json e)
+  (write-json e)
+  (newline))
 
 ;;; passphrase input
 (def (get-passphrase (prompt "Enter passphrase: "))
