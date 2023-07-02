@@ -106,8 +106,8 @@
 (def (vault-delete! vault key)
   (and (vault-get vault key)
        (set! (vault-entries vault)
-         (delete key (vault-entries vault)
-                 (lambda (key e) (equal? (hash-get e 'key) key))))))
+         (remf (lambda (e) (equal? (hash-get e 'key) key))
+               (vault-entries vault)))))
 
 ;;; vault I/O
 (def magic "%vault/v0%")
