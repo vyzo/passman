@@ -56,7 +56,7 @@
                        help: "the value to match; can optionally be a regex")
              (flag 'regex "-r"
                    help: "the niddle is a regular expression")
-             help: "search for an entry using regular expressions; the search examins the value of all fields"))
+             help: "search for an entry using regular expressions; the search examines the value of all fields"))
   (def delete-cmd
     (command 'delete
              key-arg path-option passphrase-option
