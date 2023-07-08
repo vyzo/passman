@@ -120,7 +120,7 @@
          ((get)
           (get-entry .key path: .path passphrase: .passphrase json: .?json))
          ((search)
-          (find-entry .key path: .path passphrase: .passphrase regex: .?regex) json: .?json)
+          (find-entry .niddle path: .path passphrase: .passphrase regex: .?regex json: .?json))
          ((delete)
           (delete-entry! .key path: .path passphrase: .passphrase))
          ((dump)

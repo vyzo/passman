@@ -77,16 +77,15 @@
           (if rx?
             (let (rx (pregexp niddle))
               (lambda (val)
-                (pregexp-match rx val))
-              (lambda (val)
-                (string-contains val niddle)))))
+                (pregexp-match rx val)))
+            (lambda (val)
+              (string-contains val niddle))))
          (entries (vault.vault-find vault search)))
     (for (e entries)
       (if json?
         (write-json e)
         (write-entry e))
-      (newline))
-    ))
+      (newline))))
 
 (def (delete-entry! key path: path passphrase: pass)
   (unless (file-exists? path)
