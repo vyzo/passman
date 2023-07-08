@@ -1,0 +1,33 @@
+(gerbil-build-deps-v2:
+ (vyzo/passman/vault
+  "passman/vault"
+  (gerbil/core
+   gerbil/gambit
+   std/crypto
+   std/iter
+   std/misc/ports
+   std/srfi/1
+   std/srfi/13
+   std/text/json
+   std/text/utf8))
+ (vyzo/passman/cmd
+  "passman/cmd"
+  (gerbil/core
+   gerbil/gambit
+   std/iter
+   std/misc/shuffle
+   std/misc/symbol
+   std/pregexp
+   std/sort
+   std/srfi/13
+   std/sugar
+   std/text/json
+   vyzo/passman/vault))
+ (vyzo/passman/main
+  (exe: "passman/main" bin: "passman")
+  (gerbil/core
+   gerbil/gambit/exceptions
+   std/getopt
+   std/sugar
+   vyzo/passman/cmd)))
+
