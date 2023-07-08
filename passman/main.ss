@@ -133,7 +133,7 @@
                                           special:   .special))
             (displayln passwd)))
          ((help)
-          (getopt-display-help-topic gopt .?command "gxkpg")))))
+          (getopt-display-help-topic gopt .?command "passman")))))
    (catch (getopt-error? exn)
      (getopt-display-help exn "passman" (current-error-port))
      (exit 1))
