@@ -174,3 +174,6 @@ albeit with a bit of work.  We would like to improve the gerbil
 toolchain so as cross compilation is a breeze.  You can also build
 passman directly on the device (for instance with termux), but clearly
 this is neither a nice developer and user experience.
+
+# Copyright
+© 2023 vyzo; License: MIT
