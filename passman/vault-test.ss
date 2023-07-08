@@ -19,6 +19,7 @@
 (def (entry-list-equal? x y)
   (and (list? x)
        (list? y)
+       (= (length x) (length y))
        (andmap entry-equal? x y)))
 
 (def vault-test
