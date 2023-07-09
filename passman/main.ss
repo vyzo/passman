@@ -97,15 +97,17 @@
 
   ;; the driver
   (def gopt
-    (getopt create-cmd
-            add-cmd
-            update-cmd
-            get-cmd
-            search-cmd
-            delete-cmd
-            dump-cmd
-            genpass-cmd
-            help-cmd))
+    (getopt
+     help: "A personal password manager"
+     create-cmd
+     add-cmd
+     update-cmd
+     get-cmd
+     search-cmd
+     delete-cmd
+     dump-cmd
+     genpass-cmd
+     help-cmd))
 
   (try
    (let ((values cmd opt) (getopt-parse gopt args))
