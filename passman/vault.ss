@@ -130,7 +130,7 @@
              (cipher (make-cipher))
              (ciphertext
               (encrypt cipher
-                       (passphrase->key (vault-pass vault))
+                       (passphrase->key (vault-pass vault) (cipher-key-length cipher))
                        (make-u8vector (cipher-iv-length cipher)) ; IV = 0...
                        plaintext)))
         (call-with-output-file [path: tmp permissions: #o600]
@@ -146,7 +146,7 @@
          (cipher (make-cipher))
          (plaintext
           (decrypt cipher
-                    (passphrase->key (vault-pass vault))
+                    (passphrase->key (vault-pass vault) (cipher-key-length cipher))
                     (make-u8vector (cipher-iv-length cipher)) ; IV = 0 ...
                     ciphertext))
          (input (open-input-u8vector plaintext)))
@@ -159,5 +159,6 @@
           (set! (vault-entries vault) (reverse es))
           (lp (cons e es)))))))
 
-(def (passphrase->key pass)
-  (sha256 (string->utf8 pass)))
+(def salt "passman")
+(def (passphrase->key pass size)
+  (scrypt pass salt size))

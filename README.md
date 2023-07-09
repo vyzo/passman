@@ -22,6 +22,8 @@ You can install it through the gerbil package manager:
 gxpkg install github.com/vyzo/passman
 ```
 
+Note: passman requires a recent gerbil master build, for scrypt support.
+
 ## Usage
 
 ```
