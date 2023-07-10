@@ -16,7 +16,6 @@ build:
 linux-static-docker:
 	docker run -it \
 	-e GERBIL_PATH=/src/.gerbil \
-	-e PROJECT=$(PROJECT) \
 	-u "$(UID):$(GID)" \
 	-v $(PWD):/src:z \
 	gerbil/alpine:master \
