@@ -4,15 +4,14 @@
 # @file
 # @version 0.1
 
-PROJECT := passman #;$(shell basename $(PWD))
 $(eval UID := $(shell id -u))
 $(eval GID := $(shell id -g))
 
 default: linux-static-docker
 
 build:
-	$(GERBIL_HOME)/bin/gxpkg link $(PROJECT) /src || true
-	$(GERBIL_HOME)/bin/gxpkg build $(PROJECT)
+	$(GERBIL_HOME)/bin/gxpkg link passman /src || true
+	$(GERBIL_HOME)/bin/gxpkg build passman
 
 linux-static-docker:
 	docker run -it \
@@ -30,9 +29,9 @@ linux-static: build
 	-exe passman/main.ss
 
 clean:
-	rm -f $(PROJECT)-bin
+	rm -f passman-bin
 
 install:
-	mv $(PROJECT)-bin /usr/local/bin/$(PROJECT)
+	mv $passman-bin /usr/local/bin/passman
 
 # end
