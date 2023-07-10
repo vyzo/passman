@@ -25,17 +25,21 @@ gxpkg install github.com/vyzo/passman
 Note: passman requires a recent gerbil master build, for scrypt support.
 
 ## Static build using Docker
-You can also install via Docker removing the need for installing Gambit/Gerbil
+You can also install via Docker removing the need for installing Gambit/Gerbil.
 
 ``` sh
+git clone git@github.com:vyzo/passman.git
+cd passman
 make
 ```
-This will generate a passman-bin which is statically linked.
+This will generate a `passman-bin` executable which is _fully_
+statically linked and has no outside dependencies.
+
 
 ``` sh
 make install
 ```
-This will install it to /usr/local/bin
+This will install `passman-bin` to /usr/local/bin
 
 ## Usage
 
