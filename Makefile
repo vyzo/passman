@@ -1,5 +1,5 @@
 ##
-# Project Title
+# Passman password manager.
 #
 # @file
 # @version 0.1
@@ -26,7 +26,7 @@ linux-static-docker:
 linux-static: build
 	$(GERBIL_HOME)/bin/gxc -o passman-bin -static \
 	-cc-options "-Bstatic" \
-	-ld-options "-static -lpthread -L/usr/lib64 -lssl -ldl -lyaml -lz" \
+	-ld-options "-static -lpthread -L/usr/lib64 -lssl -ldl -lcrypto -lz" \
 	-exe passman/main.ss
 
 clean:
