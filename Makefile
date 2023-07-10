@@ -31,6 +31,6 @@ clean:
 	rm -f passman-bin
 
 install:
-	mv $passman-bin /usr/local/bin/passman
+	mv passman-bin /usr/local/bin/passman
 
 # end
