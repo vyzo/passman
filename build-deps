@@ -15,6 +15,7 @@
   (gerbil/core
    gerbil/gambit
    std/iter
+   std/misc/ports
    std/misc/shuffle
    std/misc/symbol
    std/pregexp

@@ -5,6 +5,7 @@
         :std/text/json
         :std/misc/shuffle
         :std/misc/symbol
+        :std/misc/ports
         :std/srfi/13
         :std/pregexp
         (prefix-in ./vault vault.))
@@ -178,13 +179,7 @@
 
 ;;; passphrase input
 (def (get-passphrase (prompt "Enter passphrase: "))
-  (display prompt)
-  (force-output)
-  (##tty-mode-set! (current-input-port) #f #f #f #f 0) ; turn off echo
-  (try (let (passphrase (read-line))
-         (newline)
-         passphrase)
-       (finally (##tty-mode-reset))))
+  (read-password prompt: prompt))
 
 (def (get-new-passphrase)
   (let* ((pass1 (get-passphrase "Enter new passphrase: "))
