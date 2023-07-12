@@ -4,9 +4,6 @@
         :gerbil/gambit/exceptions
         ./cmd)
 
-(def (implement-me! what)
-  (error "IMPLEMENT ME" what))
-
 (def (main . args)
   ;; common getopt thingies
   (def path-option
