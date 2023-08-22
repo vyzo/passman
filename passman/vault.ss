@@ -162,3 +162,11 @@
 (def salt "passman")
 (def (passphrase->key pass size)
   (scrypt pass salt size))
+
+(def salt-u8
+  (string->utf8 salt))
+
+(def (make-iv size)
+  (let (iv (make-u8vector size))
+    (subu8vector-move! salt-u8 0 (u8vector-length salt-u8) iv 0)
+    iv))
