@@ -21,17 +21,17 @@
 ;; entries are the contents of the vault as a list of hash tables.
 ;; the vault is written encrypted as ndjson with a magic marker prefix
 ;; to indicate the vault version.
-(defstruct vault (path pass entries))
+(defstruct vault (path iv pass entries))
 
 ;; create a new vault
 (def (create-vault path pass)
-  (let (vault (make-vault path pass []))
+  (let (vault (make-vault path (make-iv (cipher-iv-length (make-cipher))) pass []))
     (write-vault! vault)
     vault))
 
 ;; open an existing vault
 (def (open-vault path pass)
-  (let (vault (make-vault path pass []))
+  (let (vault (make-vault path #f pass []))
     (read-vault! vault)
     vault))
 
@@ -131,10 +131,12 @@
              (ciphertext
               (encrypt cipher
                        (passphrase->key (vault-pass vault) (cipher-key-length cipher))
-                       (make-iv (cipher-iv-length cipher))
+                       (vault-iv vault)
                        plaintext)))
         (call-with-output-file [path: tmp permissions: #o600]
-          (lambda (outp) (write-u8vector ciphertext outp)))))
+          (lambda (outp)
+            (write-u8vector (vault-iv vault) outp)
+            (write-u8vector ciphertext outp)))))
     (when (file-exists? old)
       (delete-file old))
     (when (file-exists? (vault-path vault))
@@ -144,15 +146,19 @@
 (def (read-vault! vault)
   (let* ((ciphertext (read-file-u8vector (vault-path vault)))
          (cipher (make-cipher))
+         (iv (subu8vector ciphertext 0 (cipher-iv-length cipher)))
+         (ciphertext
+          (subu8vector ciphertext (u8vector-length iv) (u8vector-length ciphertext)))
          (plaintext
           (decrypt cipher
                     (passphrase->key (vault-pass vault) (cipher-key-length cipher))
-                    (make-iv (cipher-iv-length cipher)) ; IV = 0 ...
+                    iv
                     ciphertext))
          (input (open-input-u8vector plaintext)))
     (let (input-magic (read-line input))
       (unless (equal? magic input-magic)
         (error "Bad magic" input-magic)))
+    (set! (vault-iv vault) iv)
     (let lp ((es []))
       (let (e (read-json input))
         (if (eof-object? e)
@@ -163,10 +169,7 @@
 (def (passphrase->key pass size)
   (scrypt pass salt size))
 
-(def salt-u8
-  (string->utf8 salt))
-
 (def (make-iv size)
   (let (iv (make-u8vector size))
-    (subu8vector-move! salt-u8 0 (u8vector-length salt-u8) iv 0)
+    (random-bytes! iv)
     iv))
