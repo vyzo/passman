@@ -56,7 +56,8 @@
         (error "Missing entry key" (hash->list e)))
        ((vault-get vault key) =>
         (lambda (ee)
-          (hash-merge! ee e)))
+          (for ((values k v) (in-hash e))
+            (hash-put! ee k v))))
        (else
         (set! (vault-entries vault) (append! (vault-entries vault) [e])))))))
 

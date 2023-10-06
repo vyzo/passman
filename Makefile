@@ -1,36 +1,20 @@
-##
-# Passman password manager.
-#
-# @file
-# @version 0.1
+ARCH :=$(shell uname -m)
+DOCKER_IMAGE := "gerbil/gerbil:$(ARCH)"
+default: linux-static
 
-$(eval UID := $(shell id -u))
-$(eval GID := $(shell id -g))
+build-release:
+	/opt/gerbil/bin/gxpkg build --release
 
-default: linux-static-docker
-
-build:
-	$(GERBIL_HOME)/bin/gxpkg link passman /src || true
-	$(GERBIL_HOME)/bin/gxpkg build passman
-
-linux-static-docker:
+linux-static:
 	docker run -it \
+	-e USER=$(USER) \
 	-e GERBIL_PATH=/src/.gerbil \
-	-u "$(UID):$(GID)" \
 	-v $(PWD):/src:z \
-	gerbil/alpine:master \
-	make -C /src linux-static
-
-linux-static: build
-	$(GERBIL_HOME)/bin/gxc -o passman-bin -static \
-	-cc-options "-Bstatic" \
-	-ld-options "-static -lpthread -L/usr/lib64 -lssl -ldl -lcrypto -lz" \
-	-exe passman/main.ss
+	$(DOCKER_IMAGE) \
+	make -C /src/ build-release
 
 clean:
-	rm -f passman-bin
+	gerbil clean
 
 install:
-	mv passman-bin /usr/local/bin/passman
-
-# end
+	cp .gerbil/bin/passman /usr/local/bin/passman
